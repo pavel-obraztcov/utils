@@ -1,4 +1,5 @@
 import subprocess
+import re
 
 
 class ImpalaError(Exception):
@@ -19,7 +20,10 @@ def run_query_impala(query: str, db: str = "aa_work", output=None):
     ]
 
     if output is not None:
-        command.append(f"-o {output}")
+        command.append(f"-o{output}")
+
+    print("Running query:")
+    print(query)
 
     out = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -28,5 +32,9 @@ def run_query_impala(query: str, db: str = "aa_work", output=None):
             "\n\nimpala-shell had a non-zero exit status:\n\n" +
             out.stdout.decode("utf-8")
         )
-        
-    print(out.stdout.decode("utf-8"))
+    process_output = out.stdout.decode("utf-8").split("\n")
+    process_output = [l for l in process_output
+                        if re.match("^Query submitted.*|^Fetched.*", l) is not None]
+    process_output = "\n".join(process_output)
+    print("\n")
+    print(process_output)
